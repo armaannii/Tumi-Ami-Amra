@@ -60,6 +60,10 @@ const CONTACTS = [
   { icon: Mail, text: "hello@tumi-amiamra.org" },
 ];
 
+/* Evaluated once at module load — stable across prerenders (cacheComponents
+   forbids new Date() called during render). */
+const YEAR = new Date().getFullYear();
+
 export default function Footer() {
   return (
     <footer className="border-t-4 border-brand bg-night text-white">
@@ -137,7 +141,7 @@ export default function Footer() {
 
         <div className="mt-12 flex flex-col items-center justify-between gap-3 border-t border-white/15 pt-6 sm:flex-row">
           <p className="text-xs text-white/55">
-            © {new Date().getFullYear()} Tumi Ami Amra. All rights reserved.
+            © {YEAR} Tumi Ami Amra. All rights reserved.
           </p>
           <p className="text-xs text-white/55">
             Built for communities, by communities.
