@@ -2,12 +2,16 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { ChevronDown, Menu, X } from "lucide-react";
+import { ChevronDown, LogOut, Menu, X } from "lucide-react";
 import { cn } from "cn";
 import ThemeToggle from "./theme-toggle";
-import { demoUser } from "@/lib/demo-user";
+import { signOut, useSession } from "@/lib/auth-client";
+import { Button } from "@heroui/react";
+import toast from "react-hot-toast";
+import { useRouter } from "next/navigation";
 
-const NAV_LINKS = [
+
+const navLinks = [
   { label: "Home", href: "/#hero" },
   { label: "How It Works", href: "/#how-it-works" },
   { label: "Events", href: "/#recent-events" },
@@ -15,7 +19,7 @@ const NAV_LINKS = [
   { label: "Contact", href: "/#newsletter" },
 ];
 
-const USER_MENU = [
+const userMenu = [
   { label: "Create Event", href: "/create-event" },
   { label: "Manage Events", href: "/manage-events" },
   { label: "Joined Events", href: "/joined-events" },
@@ -27,19 +31,12 @@ const USER_MENU = [
  * signed-in user's name shown on hover — per the assignment's navbar spec.
  */
 export default function Navbar() {
-  const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const { data: session, isPending } = useSession();
+  const router = useRouter();
 
-  useEffect(() => {
-    function onScroll() {
-      setScrolled(window.scrollY > 24);
-    }
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
 
   useEffect(() => {
     function onClick(e: MouseEvent) {
@@ -51,13 +48,21 @@ export default function Navbar() {
     return () => document.removeEventListener("mousedown", onClick);
   }, []);
 
+  const handleSignOut = async () => {
+    await signOut({
+      fetchOptions: {
+        onSuccess: () => {
+          router.push("/pages/log-in");
+        },
+      },
+    });
+    toast.success("Sign Out successfull!")
+  };
+
   return (
     <header
       className={cn(
-        "fixed inset-x-0 top-0 z-50 transition-colors duration-300",
-        scrolled || mobileOpen
-          ? "border-b-2 border-forest/10 bg-white/95 backdrop-blur dark:border-white/10 dark:bg-night/95"
-          : "bg-transparent",
+        "fixed inset-x-0 top-0 z-50 transition-colors duration-300 border-b-2 border-forest/10 bg-white/95 backdrop-blur dark:border-white/10 dark:bg-night/95"
       )}
     >
       <div className="mx-auto flex h-18 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:h-22 lg:px-8">
@@ -67,9 +72,7 @@ export default function Navbar() {
           className="group flex items-center gap-2.5"
           aria-label="Tumi Ami Amra home"
         >
-          <span className="flex size-9 items-center justify-center bg-brand text-lg leading-none font-black text-forest transition-transform group-hover:rotate-6">
-            ত
-          </span>
+
           <span className="font-display text-base leading-none font-black tracking-tight text-forest uppercase dark:text-brand lg:text-lg">
             Tumi<span className="text-brand dark:text-white"> Ami </span>Amra
           </span>
@@ -77,7 +80,7 @@ export default function Navbar() {
 
         {/* Desktop nav */}
         <nav className="hidden items-center gap-7 lg:flex" aria-label="Primary">
-          {NAV_LINKS.map((link) => (
+          {navLinks.map((link) => (
             <Link
               key={link.label}
               href={link.href}
@@ -92,34 +95,43 @@ export default function Navbar() {
         <div className="flex items-center gap-2.5">
           <ThemeToggle />
 
-          {demoUser ? (
+          {session?.user ? (
             <div ref={menuRef} className="relative hidden sm:block">
-              <button
-                type="button"
-                onClick={() => setMenuOpen((v) => !v)}
-                aria-expanded={menuOpen}
-                aria-haspopup="menu"
-                className="group flex items-center gap-2 border-2 border-forest py-1.5 pr-2 pl-1.5 transition-colors hover:bg-brand dark:border-brand"
-              >
-                {/* Hover display name (assignment: avatar hover → user name) */}
-                <span className="max-w-0 overflow-hidden font-display text-xs font-semibold whitespace-nowrap text-forest uppercase opacity-0 transition-all duration-300 group-hover:max-w-40 group-hover:opacity-100 dark:text-brand">
-                  {demoUser.name}
-                </span>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={demoUser.photoURL}
-                  alt={demoUser.name}
-                  width={34}
-                  height={34}
-                  className="size-8.5 rounded-full object-cover"
-                />
-                <ChevronDown
-                  className={cn(
-                    "size-4 text-forest transition-transform dark:text-brand",
-                    menuOpen && "rotate-180",
-                  )}
-                />
-              </button>
+              <div className="flex gap-4 items-center">
+                <button
+                  type="button"
+                  onClick={() => setMenuOpen((v) => !v)}
+                  aria-expanded={menuOpen}
+                  aria-haspopup="menu"
+                  className="group flex items-center gap-3 py-1.5 pr-2 pl-1.5 transition-colors rounded-2xl border-2 hover:bg-brand dark:border-brand dark:hover:bg-forest"
+                >
+                  {/* Hover display name (assignment: avatar hover → user name) */}
+                  <span className="max-w-0 overflow-hidden font-display text-xs font-semibold whitespace-nowrap text-forest uppercase opacity-0 transition-all duration-300 group-hover:max-w-40 group-hover:opacity-100 dark:text-brand">
+                    {session.user.name}
+                  </span>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={session.user.image || " "}
+                    alt={session.user.name}
+                    width={34}
+                    height={34}
+                    className="size-8.5 rounded-full object-cover"
+                  />
+                  <ChevronDown
+                    className={cn(
+                      "size-4 text-forest transition-transform dark:text-brand",
+                      menuOpen && "rotate-180",
+                    )}
+                  />
+                </button>
+                <Button
+                  onClick={() => handleSignOut()}
+                  className="font-bold py-6 hover:text-red-700 hover:bg-red-100"
+                >
+                  <LogOut size={17} />
+                  Log Out
+                </Button>
+              </div>
 
               {menuOpen && (
                 <div
@@ -128,13 +140,13 @@ export default function Navbar() {
                 >
                   <div className="border-b-2 border-forest/10 px-4 py-3 dark:border-white/10">
                     <p className="font-display text-sm font-bold text-forest uppercase dark:text-brand">
-                      {demoUser.name}
+                      {session.user.name}
                     </p>
                     <p className="truncate text-xs text-muted-foreground">
-                      {demoUser.email}
+                      {session.user.email}
                     </p>
                   </div>
-                  {USER_MENU.map((item) => (
+                  {userMenu.map((item) => (
                     <Link
                       key={item.label}
                       href={item.href}
@@ -145,15 +157,24 @@ export default function Navbar() {
                       {item.label}
                     </Link>
                   ))}
+                  <div className="border-t-2 border-forest/10 dark:border-white/10">
+                    <Button
+                      onClick={() => handleSignOut()}
+                      className="font-bold text-red-600 bg-white dark:bg-forest"
+                    >
+                      <LogOut size={17} />
+                      Log Out
+                    </Button>
+                  </div>
                 </div>
               )}
             </div>
           ) : (
             <Link
-              href="/login"
-              className="hidden border-2 border-forest bg-brand px-5 py-2.5 font-display text-xs font-bold tracking-wide text-forest uppercase transition-colors hover:bg-forest hover:text-brand sm:inline-flex dark:border-brand dark:hover:bg-brand dark:hover:text-forest"
+              href="/pages/log-in"
+              className="hidden border-2 border-gray bg-brand px-5 py-2.5 font-display text-xs font-bold tracking-wide text-forest uppercase transition-colors hover:bg-forest hover:text-brand sm:inline-flex dark:border-brand dark:hover:bg-brand dark:hover:text-forest rounded-2xl"
             >
-              Login
+              Log In
             </Link>
           )}
 
@@ -176,7 +197,7 @@ export default function Navbar() {
           aria-label="Mobile"
           className="border-t-2 border-forest/10 bg-white px-4 pb-6 pt-3 dark:border-white/10 dark:bg-night lg:hidden"
         >
-          {NAV_LINKS.map((link) => (
+          {navLinks.map((link) => (
             <Link
               key={link.label}
               href={link.href}
@@ -186,8 +207,8 @@ export default function Navbar() {
               {link.label}
             </Link>
           ))}
-          {demoUser ? (
-            USER_MENU.map((item) => (
+          {session?.user ? (
+            userMenu.map((item) => (
               <Link
                 key={item.label}
                 href={item.href}

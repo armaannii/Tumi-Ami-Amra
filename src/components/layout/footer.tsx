@@ -72,9 +72,7 @@ export default function Footer() {
           {/* Brand */}
           <div className="lg:col-span-4">
             <Link href="/" className="flex items-center gap-2.5">
-              <span className="flex size-9 items-center justify-center bg-brand text-lg leading-none font-black text-forest">
-                ত
-              </span>
+              
               <span className="font-display text-lg font-black tracking-tight text-white uppercase">
                 Tumi <span className="text-brand">Ami Amra</span>
               </span>

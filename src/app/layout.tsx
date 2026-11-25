@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Rubik, DM_Sans, Geist_Mono } from "next/font/google";
+import { Toaster } from "react-hot-toast";
 import "./globals.css";
 import Navbar from "@/components/layout/navbar";
 import Footer from "@/components/layout/footer";
@@ -38,10 +39,17 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${rubik.variable} ${dmSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col">
-        <script dangerouslySetInnerHTML={{ __html: themeInit }} />
+        {/* <script dangerouslySetInnerHTML={{ __html: themeInit }} /> */}
         <Navbar />
         <main className="flex-1">{children}</main>
         <Footer />
+        <Toaster
+          position="bottom-right"
+          toastOptions={{
+            className:
+              "font-display text-sm font-semibold rounded-none border-2 border-forest bg-white px-4 py-3 text-forest shadow-[6px_6px_0_0_var(--brand)] dark:border-brand dark:bg-forest dark:text-brand",
+          }}
+        />
       </body>
     </html>
   );
